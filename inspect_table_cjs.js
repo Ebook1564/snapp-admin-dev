@@ -8,8 +8,14 @@ const envPath = path.resolve(process.cwd(), '.env.local');
 const envContent = fs.readFileSync(envPath, 'utf8');
 const env = {};
 envContent.split('\n').forEach(line => {
-    const [key, value] = line.split('=');
-    if (key && value) env[key.trim()] = value.trim();
+    const [key, ...rest] = line.split('=');
+    if (key && rest.length > 0) {
+        let value = rest.join('=').trim();
+        if (value.includes('#')) {
+            value = value.split('#')[0].trim();
+        }
+        env[key.trim()] = value;
+    }
 });
 
 const pool = new Pool({
@@ -27,7 +33,7 @@ async function inspectTable() {
         const columns = await pool.query(`
             SELECT column_name, data_type, is_nullable, column_default
             FROM information_schema.columns 
-            WHERE table_name = 'gamecollection'
+            WHERE table_name = 'userdatatable'
         `);
         console.table(columns.rows);
 
@@ -36,7 +42,7 @@ async function inspectTable() {
             SELECT conname, pg_get_constraintdef(c.oid)
             FROM pg_constraint c 
             JOIN pg_namespace n ON n.oid = c.connamespace 
-            WHERE c.conrelid = 'public.gamecollection'::regclass
+            WHERE c.conrelid = 'public.userdatatable'::regclass
         `);
         console.table(constraints.rows);
 
@@ -45,6 +51,17 @@ async function inspectTable() {
             SELECT pg_get_serial_sequence('gamecollection', 'uid') as seq_name
         `);
         console.log('Sequence for uid:', seq.rows[0]);
+
+        console.log('\n--- Migration ---');
+        try {
+            await pool.query(`
+                ALTER TABLE userdatatable 
+                ADD COLUMN IF NOT EXISTS settlement_status VARCHAR(20) DEFAULT 'pending'
+            `);
+            console.log('Column settlement_status ensured.');
+        } catch (mErr) {
+            console.error('Migration error:', mErr.message);
+        }
 
         process.exit(0);
     } catch (err) {

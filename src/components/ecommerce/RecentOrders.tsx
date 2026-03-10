@@ -54,14 +54,7 @@ export default function RecentOrders() {
   useEffect(() => {
     async function fetchUsers() {
       try {
-        // First, ensure database columns exist (this will auto-add them if missing)
-        try {
-          await fetch("/api/migrations/add-user-columns", { method: "POST" });
-        } catch (migrationError) {
-          console.log("Migration check completed");
-        }
-
-        const res = await fetch("/api/users");
+        const res = await fetch("/api/profile");
         const json = await res.json();
 
         if (json.success) {
@@ -108,14 +101,13 @@ export default function RecentOrders() {
 
     setDeleting(true);
     try {
-      const response = await fetch(`/api/users/${userToDelete.id}`, {
+      const response = await fetch(`/api/profile/${userToDelete.id}`, {
         method: "DELETE",
       });
 
       const json = await response.json();
 
       if (json.success) {
-        // Remove the user from the local state
         setUsers((prevUsers) =>
           prevUsers.filter((user) => user.id !== userToDelete.id)
         );
@@ -125,59 +117,46 @@ export default function RecentOrders() {
       } else {
         const errorMsg = json.error || "Failed to delete user";
         setDeleteError(errorMsg);
-        setError(errorMsg);
       }
     } catch (e) {
       console.error("Error deleting user:", e);
-      const errorMsg = "Failed to delete user. Please try again.";
-      setDeleteError(errorMsg);
-      setError(errorMsg);
+      setDeleteError("Failed to delete user. Please try again.");
     } finally {
       setDeleting(false);
     }
   };
 
   const handleSeeAllClick = () => {
-    router.push("/users");
+    router.push("/basic-tables");
   };
 
-  // Filter users based on search query and status
   const filteredUsers = users.filter((user) => {
-    // Status filter
     if (statusFilter !== "all") {
       const userStatus = (user.status || "interested").toLowerCase();
       const filterStatus = statusFilter.toLowerCase();
-      if (userStatus !== filterStatus) {
-        return false;
-      }
+      if (userStatus !== filterStatus) return false;
     }
 
-    // Search query filter
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
-      user.username.toLowerCase().includes(query) ||
-      user.useremail.toLowerCase().includes(query) ||
-      user.countryname.toLowerCase().includes(query) ||
-      user.phonenumber.toString().includes(query) ||
-      user.producturl.toLowerCase().includes(query)
+      (user.username || "").toLowerCase().includes(query) ||
+      (user.useremail || "").toLowerCase().includes(query) ||
+      (user.countryname || "").toLowerCase().includes(query) ||
+      (user.phonenumber || "").toString().includes(query)
     );
   });
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredUsers.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const endIndex = startIndex + ITEMS_PER_PAGE;
   const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
-  // Reset to page 1 when search or status filter changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
 
-  // Export to CSV function
   const handleExportCSV = () => {
-    // Prepare CSV headers
     const headers = [
       "ID",
       "Username",
@@ -190,7 +169,6 @@ export default function RecentOrders() {
       "Admin Comment",
     ];
 
-    // Prepare CSV rows
     const rows = filteredUsers.map((user) => [
       user.id.toString(),
       user.username,
@@ -200,10 +178,9 @@ export default function RecentOrders() {
       user.countryname,
       user.producturl,
       user.status || "interested",
-      (user.admin_comment || "").replace(/"/g, '""'), // Escape quotes in CSV
+      (user.admin_comment || "").replace(/"/g, '""'),
     ]);
 
-    // Combine headers and rows
     const csvContent = [
       headers.join(","),
       ...rows.map((row) =>
@@ -211,7 +188,6 @@ export default function RecentOrders() {
       ),
     ].join("\n");
 
-    // Create blob and download
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -228,7 +204,7 @@ export default function RecentOrders() {
 
     setSaving(true);
     try {
-      const response = await fetch(`/api/users/${selectedUser.id}`, {
+      const response = await fetch(`/api/profile/${selectedUser.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -242,7 +218,6 @@ export default function RecentOrders() {
       const json = await response.json();
 
       if (json.success) {
-        // Update the user in the local state
         setUsers((prevUsers) =>
           prevUsers.map((user) =>
             user.id === selectedUser.id
@@ -327,11 +302,10 @@ export default function RecentOrders() {
             </button>
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-theme-sm font-medium shadow-theme-xs transition-colors ${
-                showSearch
-                  ? "border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-900/20 dark:text-brand-400"
-                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
-              }`}
+              className={`inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-theme-sm font-medium shadow-theme-xs transition-colors ${showSearch
+                ? "border-brand-500 bg-brand-50 text-brand-700 dark:border-brand-500 dark:bg-brand-900/20 dark:text-brand-400"
+                : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+                }`}
             >
               Search
             </button>
@@ -350,51 +324,46 @@ export default function RecentOrders() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setStatusFilter("all")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === "all"
-                  ? "bg-brand-500 text-white shadow-sm"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === "all"
+                ? "bg-brand-500 text-white shadow-sm"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                }`}
             >
               All ({users.length})
             </button>
             <button
               onClick={() => setStatusFilter("interested")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === "interested"
-                  ? "bg-blue-500 text-white shadow-sm"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === "interested"
+                ? "bg-blue-500 text-white shadow-sm"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                }`}
             >
               Interested ({users.filter(u => (u.status || "interested").toLowerCase() === "interested").length})
             </button>
             <button
               onClick={() => setStatusFilter("ongoing")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === "ongoing"
-                  ? "bg-green-500 text-white shadow-sm"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === "ongoing"
+                ? "bg-green-500 text-white shadow-sm"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                }`}
             >
               Ongoing ({users.filter(u => (u.status || "interested").toLowerCase() === "ongoing").length})
             </button>
             <button
               onClick={() => setStatusFilter("Hold")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === "Hold"
-                  ? "bg-yellow-500 text-white shadow-sm"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === "Hold"
+                ? "bg-yellow-500 text-white shadow-sm"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                }`}
             >
               Hold ({users.filter(u => (u.status || "interested").toLowerCase() === "hold").length})
             </button>
             <button
               onClick={() => setStatusFilter("Declined")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                statusFilter === "Declined"
-                  ? "bg-red-500 text-white shadow-sm"
-                  : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${statusFilter === "Declined"
+                ? "bg-red-500 text-white shadow-sm"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                }`}
             >
               Declined ({users.filter(u => (u.status || "interested").toLowerCase() === "declined").length})
             </button>
@@ -435,51 +404,46 @@ export default function RecentOrders() {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => setStatusFilter("all")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === "all"
-                      ? "bg-brand-500 text-white shadow-sm"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === "all"
+                    ? "bg-brand-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                    }`}
                 >
                   All
                 </button>
                 <button
                   onClick={() => setStatusFilter("interested")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === "interested"
-                      ? "bg-blue-500 text-white shadow-sm"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === "interested"
+                    ? "bg-blue-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                    }`}
                 >
                   Interested
                 </button>
                 <button
                   onClick={() => setStatusFilter("ongoing")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === "ongoing"
-                      ? "bg-green-500 text-white shadow-sm"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === "ongoing"
+                    ? "bg-green-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                    }`}
                 >
                   Ongoing
                 </button>
                 <button
                   onClick={() => setStatusFilter("Hold")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === "Hold"
-                      ? "bg-yellow-500 text-white shadow-sm"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === "Hold"
+                    ? "bg-yellow-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                    }`}
                 >
                   Hold
                 </button>
                 <button
                   onClick={() => setStatusFilter("Declined")}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    statusFilter === "Declined"
-                      ? "bg-red-500 text-white shadow-sm"
-                      : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${statusFilter === "Declined"
+                    ? "bg-red-500 text-white shadow-sm"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700 dark:hover:bg-gray-700"
+                    }`}
                 >
                   Declined
                 </button>
@@ -489,171 +453,129 @@ export default function RecentOrders() {
         </div>
       )}
 
-      <div className="max-w-full overflow-x-auto px-4 py-5">
+      <div className="max-w-full overflow-x-auto custom-scrollbar">
         <Table>
-          {/* Table Header */}
           <TableHeader className="border-gray-100 dark:border-gray-800 border-y bg-gray-50 dark:bg-gray-800/50">
             <TableRow>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
+              <TableCell isHeader className="px-5 py-3.5 font-semibold text-gray-600 text-start text-xs uppercase tracking-wider dark:text-gray-400">
                 S.No
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Username
+              <TableCell isHeader className="px-5 py-3.5 font-semibold text-gray-600 text-start text-xs uppercase tracking-wider dark:text-gray-400">
+                User Information
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Useremail
+              <TableCell isHeader className="px-5 py-3.5 font-semibold text-gray-600 text-start text-xs uppercase tracking-wider dark:text-gray-400">
+                Contact Details
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Contact No
+              <TableCell isHeader className="px-5 py-3.5 font-semibold text-gray-600 text-start text-xs uppercase tracking-wider dark:text-gray-400">
+                Location
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Country Name
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Provided URL
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
+              <TableCell isHeader className="px-5 py-3.5 font-semibold text-gray-600 text-start text-xs uppercase tracking-wider dark:text-gray-400">
                 Status
               </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
+              <TableCell isHeader className="px-5 py-3.5 font-semibold text-gray-600 text-end text-xs uppercase tracking-wider dark:text-gray-400">
                 Actions
               </TableCell>
             </TableRow>
           </TableHeader>
 
-          {/* Dynamic Table Body */}
-          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800 px-4 py-5">
+          <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
             {paginatedUsers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center">
+                <TableCell colSpan={6} className="py-12 text-center">
                   <p className="text-gray-500 dark:text-gray-400">
-                    {searchQuery ? "No users found matching your search." : "No users found."}
+                    {searchQuery ? "No matching records found." : "No entries yet."}
                   </p>
                 </TableCell>
               </TableRow>
             ) : (
               paginatedUsers.map((user, index) => (
-                <TableRow 
+                <TableRow
                   key={user.id}
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
+                  className="cursor-pointer hover:bg-blue-50/30 dark:hover:bg-blue-500/5 transition-all duration-200"
                   onClick={() => handleRowClick(user)}
                 >
-                  {/* S.No (auto +1) */}
-                  <TableCell className="py-3 text-gray-700 text-theme-sm dark:text-gray-300 font-medium">
-                    {startIndex + index + 1}
+                  <TableCell className="px-5 py-4 text-gray-500 text-xs font-mono">
+                    {(startIndex + index + 1).toString().padStart(2, '0')}
                   </TableCell>
 
-                {/* Username */}
-                <TableCell className="py-3 text-gray-700 text-theme-sm dark:text-gray-300 font-medium">
-                  {user.username}
-                </TableCell>
+                  <TableCell className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-sm uppercase">
+                        {(user.username || "U").charAt(0)}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-semibold text-gray-900 text-sm dark:text-white/95">
+                          {user.username}
+                        </span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          {user.useremail}
+                        </span>
+                      </div>
+                    </div>
+                  </TableCell>
 
-                {/* Useremail */}
-                <TableCell className="py-3 text-gray-600 text-theme-sm dark:text-gray-400">
-                  <a
-                    href={`mailto:${user.useremail}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    {user.useremail}
-                  </a>
-                </TableCell>
+                  <TableCell className="px-5 py-4 text-start">
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        +{user.countrycode} {user.phonenumber}
+                      </span>
+                      {user.producturl && (
+                        <a
+                          href={user.producturl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[10px] text-blue-500 hover:underline truncate max-w-[150px]"
+                        >
+                          {user.producturl.replace(/^https?:\/\//, '')}
+                        </a>
+                      )}
+                    </div>
+                  </TableCell>
 
-                {/* Contact No */}
-                <TableCell className="py-3 text-gray-600 text-theme-sm dark:text-gray-400">
-                  <a
-                    href={`tel:+${user.countrycode}${user.phonenumber}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                  >
-                    +{user.countrycode} {user.phonenumber}
-                  </a>
-                </TableCell>
+                  <TableCell className="px-5 py-4 text-start">
+                    <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
+                      {user.countryname}
+                    </span>
+                  </TableCell>
 
-                {/* Country Name */}
-                <TableCell className="py-3 text-gray-600 text-theme-sm dark:text-gray-400">
-                  {user.countryname}
-                </TableCell>
-
-                {/* Product URL */}
-                <TableCell className="py-3 text-theme-sm">
-                  <a
-                    href={user.producturl}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline break-all max-w-[200px] truncate block transition-colors"
-                  >
-                    {user.producturl}
-                  </a>
-                </TableCell>
-
-                {/* Status */}
-                <TableCell className="py-3">
-                  <Badge
-                    color={getStatusBadgeColor(user.status)}
-                    variant="light"
-                    size="sm"
-                  >
-                    {(user.status || "ongoing").charAt(0).toUpperCase() + (user.status || "ongoing").slice(1)}
-                  </Badge>
-                </TableCell>
-
-                {/* Action Icons - Right Side */}
-                <TableCell className="py-3">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={(e) => handleViewClick(e, user)}
-                      className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
-                      aria-label="View user"
-                      title="View user details and comments"
+                  <TableCell className="px-5 py-4 text-start">
+                    <Badge
+                      color={getStatusBadgeColor(user.status)}
+                      variant="light"
+                      size="sm"
                     >
-                      <EyeIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => handleEditClick(e, user)}
-                      className="p-2 rounded-lg text-green-600 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20 transition-colors"
-                      aria-label="Edit user"
-                      title="Edit user status and comments"
-                    >
-                      <PencilIcon className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteClick(e, user)}
-                      className="p-2 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
-                      aria-label="Delete user"
-                      title="Delete user"
-                    >
-                      <TrashBinIcon className="w-4 h-4" />
-                    </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
+                      {user.status || "interested"}
+                    </Badge>
+                  </TableCell>
+
+                  <TableCell className="px-5 py-4">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        onClick={(e) => handleViewClick(e, user)}
+                        className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
+                        title="View details"
+                      >
+                        <EyeIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => handleEditClick(e, user)}
+                        className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-900/20 transition-colors"
+                        title="Manage"
+                      >
+                        <PencilIcon className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(e, user)}
+                        className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-900/20 transition-colors"
+                        title="Delete"
+                      >
+                        <TrashBinIcon className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))
             )}
           </TableBody>
         </Table>
@@ -694,7 +616,7 @@ export default function RecentOrders() {
             <h4 className="font-semibold text-gray-800 mb-6 text-title-sm dark:text-white/90">
               User Details & Admin Management
             </h4>
-            
+
             {/* User Information Section */}
             <div className="mb-6 rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50 p-5">
               <div className="flex items-center gap-2 mb-4">
@@ -713,7 +635,7 @@ export default function RecentOrders() {
                     {selectedUser.username}
                   </div>
                 </div>
-                
+
                 <div>
                   <Label className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
                     <EnvelopeIcon className="w-3.5 h-3.5" />
@@ -729,7 +651,7 @@ export default function RecentOrders() {
                     </a>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Phone Number</Label>
                   <div className="mt-1 px-3 py-2.5 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
@@ -744,14 +666,14 @@ export default function RecentOrders() {
                     </a>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">Country</Label>
                   <div className="mt-1 px-3 py-2.5 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 text-sm text-gray-800 dark:text-white/90">
                     {selectedUser.countryname}
                   </div>
                 </div>
-                
+
                 <div className="md:col-span-2">
                   <Label className="text-xs text-gray-500 dark:text-gray-400 mb-1.5 flex items-center gap-1.5">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -773,7 +695,7 @@ export default function RecentOrders() {
                     </a>
                   </div>
                 </div>
-                
+
                 <div>
                   <Label className="text-xs text-gray-500 dark:text-gray-400 mb-1.5">User ID</Label>
                   <div className="mt-1 px-3 py-2.5 rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900 text-sm text-gray-600 dark:text-gray-400 font-mono">
@@ -788,7 +710,7 @@ export default function RecentOrders() {
               <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
                 Admin Management
               </h5>
-              
+
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="status">Status</Label>
@@ -865,13 +787,13 @@ export default function RecentOrders() {
             <h4 className="font-semibold text-gray-800 mb-4 text-title-sm dark:text-white/90">
               Delete User
             </h4>
-            
+
             {deleteError && (
               <div className="mb-4 p-3 rounded-lg border border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                 <p className="text-sm text-red-700 dark:text-red-300">{deleteError}</p>
               </div>
             )}
-            
+
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-4 p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20">
                 <AlertIcon className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0" />
@@ -879,7 +801,7 @@ export default function RecentOrders() {
                   Are you sure you want to delete this user? This action cannot be undone.
                 </p>
               </div>
-              
+
               <div className="rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50 p-4">
                 <div className="space-y-2">
                   <div>

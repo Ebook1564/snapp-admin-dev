@@ -7,10 +7,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> | { id: string } }
 ) {
   try {
-    // Handle both sync and async params (Next.js 13+ uses async params)
     const resolvedParams = await Promise.resolve(params);
     const userId = resolvedParams?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID is required" },
@@ -18,37 +17,24 @@ export async function GET(
       );
     }
 
-    // Ensure columns exist before querying
-    try {
-      await pool.query(`SELECT status, admin_comment FROM usertable WHERE id = $1 LIMIT 1`, [userId]);
-    } catch (columnError: any) {
-      if (columnError?.message?.includes('column') && columnError?.message?.includes('does not exist')) {
-        // Add columns if they don't exist
-        await pool.query(`ALTER TABLE usertable ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'interested'`);
-        await pool.query(`ALTER TABLE usertable ADD COLUMN IF NOT EXISTS admin_comment TEXT DEFAULT ''`);
-        await pool.query(`UPDATE usertable SET status = 'interested' WHERE status IS NULL`);
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_usertable_status ON usertable(status)`);
-      }
-    }
-
     const result = await pool.query(
       `SELECT id,
-              username,
               useremail,
-              phonenumber,
-              countrycode,
-              countryname,
-              producturl,
-              COALESCE(status, 'interested') as status,
-              COALESCE(admin_comment, '') as admin_comment
-       FROM usertable
+              today_revenue,
+              yesterday_revenue,
+              last_7d_revenue,
+              this_month_revenue,
+              last_28d_revenue,
+              settlement_status,
+              created_at
+       FROM userdatatable
        WHERE id = $1`,
       [userId]
     );
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
+        { success: false, error: "Record not found" },
         { status: 404 }
       );
     }
@@ -59,16 +45,6 @@ export async function GET(
     );
   } catch (error: any) {
     console.error("API /api/users/[id] GET error:", error);
-    // Check if error is due to missing columns
-    if (error?.message?.includes('column') && error?.message?.includes('does not exist')) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Database columns 'status' or 'admin_comment' do not exist. Please run the migration script first." 
-        },
-        { status: 500 }
-      );
-    }
     return NextResponse.json(
       { success: false, error: error?.message || "Database query failed" },
       { status: 500 }
@@ -83,7 +59,7 @@ export async function PATCH(
   try {
     const resolvedParams = await Promise.resolve(params);
     const userId = resolvedParams?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID is required" },
@@ -92,37 +68,38 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status, admin_comment } = body;
-
-    // Ensure columns exist before updating
-    try {
-      await pool.query(`SELECT status, admin_comment FROM usertable WHERE id = $1 LIMIT 1`, [userId]);
-    } catch (columnError: any) {
-      if (columnError?.message?.includes('column') && columnError?.message?.includes('does not exist')) {
-        // Add columns if they don't exist
-        await pool.query(`ALTER TABLE usertable ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'interested'`);
-        await pool.query(`ALTER TABLE usertable ADD COLUMN IF NOT EXISTS admin_comment TEXT DEFAULT ''`);
-        await pool.query(`UPDATE usertable SET status = 'interested' WHERE status IS NULL`);
-        await pool.query(`CREATE INDEX IF NOT EXISTS idx_usertable_status ON usertable(status)`);
-      }
-    }
+    const {
+      useremail,
+      today_revenue,
+      yesterday_revenue,
+      last_7d_revenue,
+      this_month_revenue,
+      last_28d_revenue,
+      settlement_status,
+    } = body;
 
     // Build dynamic update query
     const updates: string[] = [];
     const values: any[] = [];
     let paramIndex = 1;
 
-    if (status !== undefined) {
-      updates.push(`status = $${paramIndex}`);
-      values.push(status);
-      paramIndex++;
-    }
+    const fields = [
+      { name: "useremail", value: useremail },
+      { name: "today_revenue", value: today_revenue },
+      { name: "yesterday_revenue", value: yesterday_revenue },
+      { name: "last_7d_revenue", value: last_7d_revenue },
+      { name: "this_month_revenue", value: this_month_revenue },
+      { name: "last_28d_revenue", value: last_28d_revenue },
+      { name: "settlement_status", value: settlement_status },
+    ];
 
-    if (admin_comment !== undefined) {
-      updates.push(`admin_comment = $${paramIndex}`);
-      values.push(admin_comment);
-      paramIndex++;
-    }
+    fields.forEach((field) => {
+      if (field.value !== undefined) {
+        updates.push(`${field.name} = $${paramIndex}`);
+        values.push(field.value);
+        paramIndex++;
+      }
+    });
 
     if (updates.length === 0) {
       return NextResponse.json(
@@ -133,18 +110,17 @@ export async function PATCH(
 
     values.push(userId);
     const updateQuery = `
-      UPDATE usertable
+      UPDATE userdatatable
       SET ${updates.join(', ')}
       WHERE id = $${paramIndex}
-      RETURNING id, username, useremail, phonenumber, countrycode, countryname, producturl, 
-                COALESCE(status, 'interested') as status, COALESCE(admin_comment, '') as admin_comment
+      RETURNING *
     `;
 
     const result = await pool.query(updateQuery, values);
 
     if (result.rows.length === 0) {
       return NextResponse.json(
-        { success: false, error: "User not found" },
+        { success: false, error: "Record not found" },
         { status: 404 }
       );
     }
@@ -155,16 +131,6 @@ export async function PATCH(
     );
   } catch (error: any) {
     console.error("API /api/users/[id] PATCH error:", error);
-    // Check if error is due to missing columns
-    if (error?.message?.includes('column') && error?.message?.includes('does not exist')) {
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: "Database columns 'status' or 'admin_comment' do not exist. Please run the migration script first." 
-        },
-        { status: 500 }
-      );
-    }
     return NextResponse.json(
       { success: false, error: error?.message || "Database update failed" },
       { status: 500 }
@@ -179,7 +145,7 @@ export async function DELETE(
   try {
     const resolvedParams = await Promise.resolve(params);
     const userId = resolvedParams?.id;
-    
+
     if (!userId) {
       return NextResponse.json(
         { success: false, error: "User ID is required" },
@@ -187,120 +153,24 @@ export async function DELETE(
       );
     }
 
-    // Use a transaction to ensure atomic deletion
-    const client = await pool.connect();
-    
-    try {
-      await client.query('BEGIN');
+    const deleteResult = await pool.query(
+      `DELETE FROM userdatatable WHERE id = $1 RETURNING id`,
+      [userId]
+    );
 
-      // First, check if user exists
-      const userResult = await client.query(
-        `SELECT useremail FROM usertable WHERE id = $1`,
-        [userId]
-      );
-
-      if (userResult.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return NextResponse.json(
-          { success: false, error: "User not found" },
-          { status: 404 }
-        );
-      }
-
-      const userEmail = userResult.rows[0].useremail;
-
-      // Delete related records from saved_passwords table
-      // Try deleting by user_id first (foreign key constraint suggests this column exists)
-      try {
-        const deleteByUserId = await client.query(
-          `DELETE FROM saved_passwords WHERE user_id = $1`,
-          [userId]
-        );
-        console.log(`Deleted ${deleteByUserId.rowCount} saved_passwords records by user_id`);
-      } catch (userIdError: any) {
-        // If user_id column doesn't exist, try email-based deletion
-        if (userIdError?.message?.includes('column') && userIdError?.message?.includes('does not exist')) {
-          try {
-            const deleteByEmail = await client.query(
-              `DELETE FROM saved_passwords WHERE LOWER(email) = LOWER($1)`,
-              [userEmail]
-            );
-            console.log(`Deleted ${deleteByEmail.rowCount} saved_passwords records by email`);
-          } catch (emailError: any) {
-            // If saved_passwords table doesn't exist, that's okay - continue
-            if (!emailError?.message?.includes('does not exist')) {
-              console.warn("Could not delete from saved_passwords by email:", emailError);
-              // Don't throw - continue with user deletion
-            }
-          }
-        } else {
-          // If it's a different error, try email-based deletion as fallback
-          try {
-            const deleteByEmail = await client.query(
-              `DELETE FROM saved_passwords WHERE LOWER(email) = LOWER($1)`,
-              [userEmail]
-            );
-            console.log(`Deleted ${deleteByEmail.rowCount} saved_passwords records by email (fallback)`);
-          } catch (emailError: any) {
-            console.warn("Could not delete from saved_passwords:", emailError);
-            // Don't throw - continue with user deletion
-          }
-        }
-      }
-
-      // Now delete the user from usertable
-      const deleteResult = await client.query(
-        `DELETE FROM usertable WHERE id = $1 RETURNING id`,
-        [userId]
-      );
-
-      if (deleteResult.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return NextResponse.json(
-          { success: false, error: "User not found" },
-          { status: 404 }
-        );
-      }
-
-      // Commit the transaction
-      await client.query('COMMIT');
-
+    if (deleteResult.rows.length === 0) {
       return NextResponse.json(
-        { success: true, message: "User deleted successfully" },
-        { status: 200 }
+        { success: false, error: "Record not found" },
+        { status: 404 }
       );
-    } catch (error: any) {
-      // Rollback transaction on error
-      try {
-        await client.query('ROLLBACK');
-      } catch (rollbackError) {
-        console.error("Error rolling back transaction:", rollbackError);
-      }
-      
-      console.error("API /api/users/[id] DELETE error:", error);
-      
-      // Check if it's a foreign key constraint error
-      if (error?.message?.includes('foreign key constraint')) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: "Cannot delete user. Please delete related records first or contact support." 
-          },
-          { status: 409 }
-        );
-      }
-      
-      return NextResponse.json(
-        { success: false, error: error?.message || "Database delete failed" },
-        { status: 500 }
-      );
-    } finally {
-      // Release the client back to the pool
-      client.release();
     }
+
+    return NextResponse.json(
+      { success: true, message: "Record deleted successfully" },
+      { status: 200 }
+    );
   } catch (error: any) {
-    // Handle errors that occur before getting the client (e.g., pool connection errors)
-    console.error("API /api/users/[id] DELETE error (outer):", error);
+    console.error("API /api/users/[id] DELETE error:", error);
     return NextResponse.json(
       { success: false, error: error?.message || "Database delete failed" },
       { status: 500 }

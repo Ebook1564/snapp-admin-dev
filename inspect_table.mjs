@@ -23,7 +23,7 @@ async function inspectTable() {
         const columns = await pool.query(`
             SELECT column_name, data_type, is_nullable, column_default
             FROM information_schema.columns 
-            WHERE table_name = 'gamecollection'
+            WHERE table_name = 'usertable'
         `);
         console.table(columns.rows);
 
@@ -32,7 +32,7 @@ async function inspectTable() {
             SELECT conname, pg_get_constraintdef(c.oid)
             FROM pg_constraint c 
             JOIN pg_namespace n ON n.oid = c.connamespace 
-            WHERE c.conrelid = 'public.gamecollection'::regclass
+            WHERE c.conrelid = 'public.usertable'::regclass
         `);
         console.table(constraints.rows);
 

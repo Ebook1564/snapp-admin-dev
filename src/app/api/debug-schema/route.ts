@@ -7,11 +7,11 @@ export async function GET() {
         const res = await pool.query(`
       SELECT column_name, data_type 
       FROM information_schema.columns 
-      WHERE table_name = 'gamecollection'
+      WHERE table_name = 'usertable'
       ORDER BY ordinal_position;
     `);
 
-        const rows = await pool.query(`SELECT * FROM gamecollection LIMIT 1`);
+        const rows = await pool.query(`SELECT * FROM usertable LIMIT 1`);
 
         return NextResponse.json({
             success: true,

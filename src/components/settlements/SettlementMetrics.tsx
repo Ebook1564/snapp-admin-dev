@@ -1,9 +1,55 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Badge from "../ui/badge/Badge";
 import { ArrowUpIcon, DollarLineIcon, CheckCircleIcon, TimeIcon } from "@/icons";
 
+interface SettlementData {
+  settlement_status: string;
+  this_month_revenue: number;
+}
+
 export default function SettlementMetrics() {
+  const [metrics, setMetrics] = useState({
+    total: 0,
+    pending: 0,
+    completed: 0,
+    totalAmount: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        const res = await fetch("/api/users");
+        const json = await res.json();
+        if (json.success) {
+          const data: SettlementData[] = json.data;
+          const stats = {
+            total: data.length,
+            pending: data.filter(s => s.settlement_status === 'pending').length,
+            completed: data.filter(s => s.settlement_status === 'completed').length,
+            totalAmount: data.reduce((acc, s) => acc + Number(s.this_month_revenue || 0), 0)
+          };
+          setMetrics(stats);
+        }
+      } catch (err) {
+        console.error("Failed to fetch metrics", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, []);
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount);
+  };
+
+  const renderValue = (val: string | number) => loading ? "..." : val;
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 md:gap-6">
       {/* Total Settlements Card */}
@@ -18,7 +64,7 @@ export default function SettlementMetrics() {
               Total Settlements
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              1,245
+              {renderValue(metrics.total)}
             </h4>
           </div>
           <Badge color="primary">
@@ -39,7 +85,7 @@ export default function SettlementMetrics() {
               Pending
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              342
+              {renderValue(metrics.pending)}
             </h4>
           </div>
           <Badge color="warning">
@@ -59,7 +105,7 @@ export default function SettlementMetrics() {
               Completed
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              903
+              {renderValue(metrics.completed)}
             </h4>
           </div>
           <Badge color="success">
@@ -80,7 +126,7 @@ export default function SettlementMetrics() {
               Total Amount
             </span>
             <h4 className="mt-2 font-bold text-gray-800 text-title-sm dark:text-white/90">
-              $245,890
+              {loading ? "..." : formatCurrency(metrics.totalAmount)}
             </h4>
           </div>
           <Badge color="success">

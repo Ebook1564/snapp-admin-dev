@@ -4,52 +4,17 @@ import pool from "../../../lib/db";
 
 export async function GET() {
   try {
-    // First, try to ensure columns exist
-    try {
-      await pool.query(`
-        SELECT status, admin_comment FROM usertable LIMIT 1
-      `);
-    } catch (columnError: any) {
-      // If columns don't exist, try to add them automatically
-      if (columnError?.message?.includes('column') && columnError?.message?.includes('does not exist')) {
-        console.log("Columns missing, attempting to add them automatically...");
-        try {
-          // Add status column
-          await pool.query(`
-            ALTER TABLE usertable 
-            ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'interested'
-          `);
-          await pool.query(`
-            UPDATE usertable SET status = 'interested' WHERE status IS NULL
-          `);
-          await pool.query(`
-            CREATE INDEX IF NOT EXISTS idx_usertable_status ON usertable(status)
-          `);
-          
-          // Add admin_comment column
-          await pool.query(`
-            ALTER TABLE usertable 
-            ADD COLUMN IF NOT EXISTS admin_comment TEXT DEFAULT ''
-          `);
-          console.log("Columns added successfully");
-        } catch (migrationError: any) {
-          console.error("Failed to add columns automatically:", migrationError);
-          // Continue to return error
-        }
-      }
-    }
-
     const result = await pool.query(
       `SELECT id,
-              username,
               useremail,
-              phonenumber,
-              countrycode,
-              countryname,
-              producturl,
-              COALESCE(status, 'interested') as status,
-              COALESCE(admin_comment, '') as admin_comment
-       FROM usertable
+              today_revenue,
+              yesterday_revenue,
+              last_7d_revenue,
+              this_month_revenue,
+              last_28d_revenue,
+              settlement_status,
+              created_at
+       FROM userdatatable
        ORDER BY id DESC`
     );
 
@@ -61,6 +26,48 @@ export async function GET() {
     console.error("API /api/users GET error:", error);
     return NextResponse.json(
       { success: false, error: error?.message || "Database query failed" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const body = await request.json();
+    const {
+      useremail,
+      today_revenue,
+      yesterday_revenue,
+      last_7d_revenue,
+      this_month_revenue,
+      last_28d_revenue,
+      settlement_status
+    } = body;
+
+    const result = await pool.query(
+      `INSERT INTO userdatatable (
+        useremail, today_revenue, yesterday_revenue, last_7d_revenue, this_month_revenue, last_28d_revenue, settlement_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING *`,
+      [
+        useremail,
+        today_revenue || 0,
+        yesterday_revenue || 0,
+        last_7d_revenue || 0,
+        this_month_revenue || 0,
+        last_28d_revenue || 0,
+        settlement_status || 'pending'
+      ]
+    );
+
+    return NextResponse.json(
+      { success: true, data: result.rows[0] },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("API /api/users POST error:", error);
+    return NextResponse.json(
+      { success: false, error: error?.message || "Failed to create user data entry" },
       { status: 500 }
     );
   }

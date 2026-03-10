@@ -9,112 +9,55 @@ import {
   TableHeader,
   TableRow,
 } from "../ui/table";
-import { EyeIcon, PencilIcon, DownloadIcon, ChevronDownIcon } from "@/icons";
+import Select from "../form/Select";
+import { EyeIcon, DownloadIcon, ChevronDownIcon } from "@/icons";
 import Pagination from "../tables/Pagination";
 import Badge from "../ui/badge/Badge";
-import Select from "../form/Select";
 
 interface Settlement {
-  id: string;
-  transactionId: string;
-  userId: string;
-  userName: string;
-  amount: number;
-  status: "pending" | "completed" | "failed" | "processing";
-  paymentMethod: string;
-  createdAt: string;
-  completedAt?: string;
-  description: string;
+  id: number;
+  useremail: string;
+  this_month_revenue: number;
+  settlement_status: "pending" | "completed" | "processing";
+  created_at: string;
 }
 
 const ITEMS_PER_PAGE = 10;
 
-// Mock data - Replace with API call
-const mockSettlements: Settlement[] = [
-  {
-    id: "1",
-    transactionId: "TXN-2024-001",
-    userId: "U12345",
-    userName: "John Doe",
-    amount: 1250.50,
-    status: "completed",
-    paymentMethod: "Bank Transfer",
-    createdAt: "2024-01-15T10:30:00Z",
-    completedAt: "2024-01-15T14:20:00Z",
-    description: "Monthly settlement payment",
-  },
-  {
-    id: "2",
-    transactionId: "TXN-2024-002",
-    userId: "U12346",
-    userName: "Jane Smith",
-    amount: 890.25,
-    status: "pending",
-    paymentMethod: "PayPal",
-    createdAt: "2024-01-16T09:15:00Z",
-    description: "Weekly settlement payment",
-  },
-  {
-    id: "3",
-    transactionId: "TXN-2024-003",
-    userId: "U12347",
-    userName: "Mike Johnson",
-    amount: 2100.75,
-    status: "processing",
-    paymentMethod: "Bank Transfer",
-    createdAt: "2024-01-17T11:45:00Z",
-    description: "Monthly settlement payment",
-  },
-  {
-    id: "4",
-    transactionId: "TXN-2024-004",
-    userId: "U12348",
-    userName: "Sarah Williams",
-    amount: 450.00,
-    status: "completed",
-    paymentMethod: "Stripe",
-    createdAt: "2024-01-18T08:20:00Z",
-    completedAt: "2024-01-18T10:30:00Z",
-    description: "Weekly settlement payment",
-  },
-  {
-    id: "5",
-    transactionId: "TXN-2024-005",
-    userId: "U12349",
-    userName: "David Brown",
-    amount: 1750.00,
-    status: "failed",
-    paymentMethod: "Bank Transfer",
-    createdAt: "2024-01-19T13:10:00Z",
-    description: "Monthly settlement payment",
-  },
-];
-
 export default function SettlementsTable() {
   const router = useRouter();
-  const [settlements, setSettlements] = useState<Settlement[]>(mockSettlements);
-  const [loading, setLoading] = useState(false);
+  const [settlements, setSettlements] = useState<Settlement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTab, setSelectedTab] = useState<"all" | "pending" | "completed" | "history">("all");
+  const [selectedTab, setSelectedTab] = useState<"all" | "pending" | "completed" | "processing">("all");
 
-  // Filter settlements based on tab and search
-  const filteredSettlements = settlements.filter((settlement) => {
-    // Tab filter
-    if (selectedTab === "pending" && settlement.status !== "pending") return false;
-    if (selectedTab === "completed" && settlement.status !== "completed") return false;
-    if (selectedTab === "history" && settlement.status !== "failed") return false;
+  const fetchSettlements = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/users");
+      const json = await res.json();
+      if (json.success) {
+        setSettlements(json.data);
+      } else {
+        setError(json.error || "Failed to fetch");
+      }
+    } catch (e) {
+      setError("Failed to load settlements");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // Search filter
+  useEffect(() => {
+    fetchSettlements();
+  }, []);
+
+  const filteredSettlements = settlements.filter((s) => {
+    if (selectedTab !== "all" && s.settlement_status !== selectedTab) return false;
     if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      settlement.transactionId.toLowerCase().includes(query) ||
-      settlement.userName.toLowerCase().includes(query) ||
-      settlement.userId.toLowerCase().includes(query) ||
-      settlement.paymentMethod.toLowerCase().includes(query) ||
-      settlement.description.toLowerCase().includes(query)
-    );
+    return s.useremail.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   // Calculate pagination
@@ -128,7 +71,7 @@ export default function SettlementsTable() {
     setCurrentPage(1);
   }, [selectedTab, searchQuery]);
 
-  const getStatusBadge = (status: Settlement["status"]) => {
+  const getStatusBadge = (status: Settlement["settlement_status"]) => {
     switch (status) {
       case "completed":
         return <Badge color="success">Completed</Badge>;
@@ -136,8 +79,6 @@ export default function SettlementsTable() {
         return <Badge color="warning">Pending</Badge>;
       case "processing":
         return <Badge color="info">Processing</Badge>;
-      case "failed":
-        return <Badge color="error">Failed</Badge>;
       default:
         return <Badge color="light">{status}</Badge>;
     }
@@ -166,20 +107,24 @@ export default function SettlementsTable() {
       ? "shadow-theme-xs text-gray-900 dark:text-white bg-white dark:bg-gray-800"
       : "text-gray-500 dark:text-gray-400";
 
-  const handleStatusChange = (settlementId: string, newStatus: string) => {
-    setSettlements((prev) =>
-      prev.map((settlement) =>
-        settlement.id === settlementId
-          ? {
-              ...settlement,
-              status: newStatus as Settlement["status"],
-              completedAt: newStatus === "completed" ? new Date().toISOString() : settlement.completedAt,
-            }
-          : settlement
-      )
-    );
-    // TODO: Add API call to update status
-    console.log(`Status updated for ${settlementId} to ${newStatus}`);
+  const handleStatusChange = async (id: number, newStatus: string) => {
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settlement_status: newStatus }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSettlements((prev) =>
+          prev.map((s) => (s.id === id ? { ...s, settlement_status: newStatus as any } : s))
+        );
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      alert("Error updating status");
+    }
   };
 
   const handleRowClick = (settlementId: string) => {
@@ -240,10 +185,10 @@ export default function SettlementsTable() {
             Completed
           </button>
           <button
-            onClick={() => setSelectedTab("history")}
-            className={`px-4 py-2 font-medium rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white transition-colors ${getTabClass("history")}`}
+            onClick={() => setSelectedTab("processing")}
+            className={`px-4 py-2 font-medium rounded-md text-theme-sm hover:text-gray-900 dark:hover:text-white transition-colors ${getTabClass("processing")}`}
           >
-            History
+            Processing
           </button>
         </div>
       </div>
@@ -253,7 +198,7 @@ export default function SettlementsTable() {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search by transaction ID, user name, or payment method..."
+            placeholder="Search by user email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-11 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 focus:border-brand-300 focus:ring-brand-500/10 dark:bg-gray-900 dark:text-white/90 dark:border-gray-700 dark:placeholder:text-white/30 dark:focus:border-brand-800"
@@ -279,43 +224,37 @@ export default function SettlementsTable() {
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Transaction ID
+                Sl.No
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                User
+                User Email
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Amount
+                Revenue (This Month)
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Payment Method
+                Status Dropdown
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
-                Status
+                Current Badge
               </TableCell>
               <TableCell
                 isHeader
                 className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
               >
                 Created At
-              </TableCell>
-              <TableCell
-                isHeader
-                className="py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-              >
-                Actions
               </TableCell>
             </TableRow>
           </TableHeader>
@@ -332,60 +271,38 @@ export default function SettlementsTable() {
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedSettlements.map((settlement) => (
+              paginatedSettlements.map((s, index) => (
                 <TableRow
-                  key={settlement.id}
-                  className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
-                  onClick={() => handleRowClick(settlement.id)}
+                  key={s.id}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/30 transition-colors"
                 >
-                  <TableCell className="py-3 text-gray-700 text-theme-sm dark:text-gray-300 font-medium">
-                    {settlement.transactionId}
+                  <TableCell className="py-3 text-gray-500 font-mono text-xs">
+                    {(startIndex + index + 1).toString().padStart(2, "0")}
+                  </TableCell>
+                  <TableCell className="py-3 font-medium text-gray-800 dark:text-white/90">
+                    {s.useremail}
+                  </TableCell>
+                  <TableCell className="py-3 font-semibold text-emerald-600 dark:text-emerald-400">
+                    {formatCurrency(s.this_month_revenue)}
                   </TableCell>
                   <TableCell className="py-3">
-                    <div>
-                      <div className="text-gray-700 text-theme-sm dark:text-gray-300 font-medium">
-                        {settlement.userName}
-                      </div>
-                      <div className="text-gray-500 text-xs dark:text-gray-400">
-                        {settlement.userId}
-                      </div>
+                    <div className="w-40 relative group">
+                      <Select
+                        options={statusOptions}
+                        value={s.settlement_status}
+                        onChange={(val) => handleStatusChange(s.id, val)}
+                        className="text-sm border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                        <ChevronDownIcon className="w-4 h-4" />
+                      </span>
                     </div>
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-700 text-theme-sm dark:text-gray-300 font-semibold">
-                    {formatCurrency(settlement.amount)}
-                  </TableCell>
-                  <TableCell className="py-3 text-gray-600 text-theme-sm dark:text-gray-400">
-                    {settlement.paymentMethod}
                   </TableCell>
                   <TableCell className="py-3">
-                    <div onClick={(e) => e.stopPropagation()} className="w-40">
-                      <div className="relative">
-                        <Select
-                          options={statusOptions}
-                          value={settlement.status}
-                          onChange={(value) => handleStatusChange(settlement.id, value)}
-                          className="text-sm"
-                        />
-                        <span className="absolute text-gray-500 -translate-y-1/2 pointer-events-none right-3 top-1/2 dark:text-gray-400">
-                          <ChevronDownIcon className="w-4 h-4" />
-                        </span>
-                      </div>
-                    </div>
+                    {getStatusBadge(s.settlement_status)}
                   </TableCell>
-                  <TableCell className="py-3 text-gray-600 text-theme-sm dark:text-gray-400">
-                    {formatDate(settlement.createdAt)}
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={(e) => handleViewClick(e, settlement.id)}
-                        className="p-2 rounded-lg text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20 transition-colors"
-                        aria-label="View settlement"
-                        title="View details"
-                      >
-                        <EyeIcon className="w-4 h-4" />
-                      </button>
-                    </div>
+                  <TableCell className="py-3 text-gray-500 text-xs">
+                    {formatDate(s.created_at)}
                   </TableCell>
                 </TableRow>
               ))
