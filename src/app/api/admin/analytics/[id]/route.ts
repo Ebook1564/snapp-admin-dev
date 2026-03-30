@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import { gaClient } from '@/lib/ga-client';
 import pool from '@/lib/db';
 
-export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-    const { id } = await context.params;
+export async function GET(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    const { id } = await params;
+
+
     const { searchParams } = new URL(request.url);
     const secretParam = searchParams.get('secret');
     const authHeader = request.headers.get('authorization');

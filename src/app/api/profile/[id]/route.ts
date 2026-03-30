@@ -3,11 +3,11 @@ import pool from "../../../../lib/db";
 
 export async function GET(
     request: Request,
-    { params }: { params: Promise<{ id: string }> | { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const resolvedParams = await Promise.resolve(params);
-        const userId = resolvedParams?.id;
+        const { id: userId } = await params;
+
 
         if (!userId) {
             return NextResponse.json(
@@ -56,11 +56,11 @@ export async function GET(
 
 export async function PATCH(
     request: Request,
-    { params }: { params: Promise<{ id: string }> | { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const resolvedParams = await Promise.resolve(params);
-        const userId = resolvedParams?.id;
+        const { id: userId } = await params;
+
 
         if (!userId) {
             return NextResponse.json(
@@ -146,11 +146,11 @@ export async function PATCH(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: Promise<{ id: string }> | { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const resolvedParams = await Promise.resolve(params);
-        const userId = resolvedParams?.id;
+        const { id: userId } = await params;
+
 
         if (!userId) {
             return NextResponse.json(
