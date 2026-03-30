@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../lib/db";
 
 // GET - Fetch all saved passwords
-export async function GET(_request: NextRequest) {
+export async function GET() {
+
 
   try {
     const query = `

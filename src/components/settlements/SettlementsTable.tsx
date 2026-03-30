@@ -10,7 +10,8 @@ import {
   TableRow,
 } from "../ui/table";
 import Select from "../form/Select";
-import { EyeIcon, DownloadIcon, ChevronDownIcon } from "@/icons";
+import { DownloadIcon, ChevronDownIcon } from "@/icons";
+
 import Pagination from "../tables/Pagination";
 import Badge from "../ui/badge/Badge";
 
@@ -25,30 +26,26 @@ interface Settlement {
 const ITEMS_PER_PAGE = 10;
 
 export default function SettlementsTable() {
-  const router = useRouter();
   const [settlements, setSettlements] = useState<Settlement[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+
+
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTab, setSelectedTab] = useState<"all" | "pending" | "completed" | "processing">("all");
 
   const fetchSettlements = async () => {
     try {
-      setLoading(true);
       const res = await fetch("/api/users");
       const json = await res.json();
       if (json.success) {
         setSettlements(json.data);
-      } else {
-        setError(json.error || "Failed to fetch");
       }
-    } catch (e) {
-      setError("Failed to load settlements");
-    } finally {
-      setLoading(false);
+    } catch {
+      console.error("Failed to load settlements");
     }
   };
+
+
 
   useEffect(() => {
     fetchSettlements();
@@ -117,24 +114,19 @@ export default function SettlementsTable() {
       const data = await response.json();
       if (data.success) {
         setSettlements((prev) =>
-          prev.map((s) => (s.id === id ? { ...s, settlement_status: newStatus as any } : s))
+          prev.map((s) => (s.id === id ? { ...s, settlement_status: newStatus as Settlement["settlement_status"] } : s))
         );
+
       } else {
         alert("Failed to update status");
       }
-    } catch (err) {
+    } catch {
       alert("Error updating status");
     }
   };
 
-  const handleRowClick = (settlementId: string) => {
-    router.push(`/profile/${settlementId}`);
-  };
 
-  const handleViewClick = (e: React.MouseEvent, settlementId: string) => {
-    e.stopPropagation();
-    router.push(`/profile/${settlementId}`);
-  };
+
 
   const statusOptions = [
     { value: "pending", label: "Pending" },
@@ -268,6 +260,7 @@ export default function SettlementsTable() {
                       ? "No settlements found matching your search."
                       : "No settlements found."}
                   </p>
+
                 </TableCell>
               </TableRow>
             ) : (

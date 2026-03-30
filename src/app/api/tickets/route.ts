@@ -75,10 +75,11 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("POST /api/tickets error:", error);
+    const message = error instanceof Error ? error.message : "Failed to create ticket";
     return NextResponse.json(
-      { success: false, error: "Failed to create ticket" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
 
     // Build conditions
     const conditions: string[] = [];
-    const params: any[] = [];
+    const params: unknown[] = [];
 
     if (statusFilter && statusFilter !== "all") {
       conditions.push(`status = $${params.length + 1}`);
@@ -144,11 +145,13 @@ export async function GET(request: NextRequest) {
       }
     }, { status: 200 });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("GET /api/tickets error:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch tickets";
     return NextResponse.json(
-      { success: false, error: "Failed to fetch tickets" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
+

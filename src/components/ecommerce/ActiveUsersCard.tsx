@@ -3,12 +3,7 @@ import React, { useState, useEffect } from "react";
 import Badge from "../ui/badge/Badge";
 import { ArrowUpIcon, GroupIcon } from "@/icons";
 
-interface DashboardMetrics {
-  todayLogin: number;
-  totalLogin: number;
-  monthlyRevenue: number;
-  activeUsers: number;
-}
+
 
 export default function ActiveUsersCard() {
   const [activeUsers, setActiveUsers] = useState<number>(0);

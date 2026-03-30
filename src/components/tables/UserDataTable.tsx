@@ -8,13 +8,13 @@ import {
     TableHeader,
     TableRow,
 } from "../ui/table";
-import { EyeIcon, PencilIcon, TrashBinIcon, PlusIcon, ChevronDownIcon } from "@/icons";
+import { EyeIcon, PencilIcon, TrashBinIcon, PlusIcon } from "@/icons";
 import { Modal } from "../ui/modal";
 import { useModal } from "@/hooks/useModal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
-import Select from "../form/Select";
+
 import Pagination from "./Pagination";
 
 const ITEMS_PER_PAGE = 10;
@@ -42,7 +42,7 @@ const initialFormData: Partial<User> = {
 export default function UserDataTable() {
     const [users, setUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+
 
     // Modals
     const addModal = useModal();
@@ -65,15 +65,14 @@ export default function UserDataTable() {
             const data = await response.json();
             if (data.success) {
                 setUsers(data.data);
-            } else {
-                setError(data.error || "Failed to fetch users");
             }
-        } catch (err) {
-            setError("An error occurred while fetching users");
+        } catch {
+            console.error("An error occurred while fetching users");
         } finally {
             setLoading(false);
         }
     };
+
 
     useEffect(() => {
         fetchUsers();
@@ -127,7 +126,8 @@ export default function UserDataTable() {
         addModal.openModal();
     };
 
-    const handleInputChange = (field: keyof User, value: any) => {
+    const handleInputChange = (field: keyof User, value: string) => {
+
         // Parse revenue fields to numbers
         if (["today_revenue", "yesterday_revenue", "last_7d_revenue", "this_month_revenue", "last_28d_revenue"].includes(field)) {
             const numValue = value === "" ? 0 : parseFloat(value);
@@ -157,10 +157,12 @@ export default function UserDataTable() {
             } else {
                 alert(data.error || "Failed to save");
             }
-        } catch (err: any) {
-            alert(`Error: ${err.message}`);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "An unknown error occurred";
+            alert(`Error: ${message}`);
         }
     };
+
 
     const handleDelete = async () => {
         if (selectedUser) {
@@ -178,11 +180,13 @@ export default function UserDataTable() {
                 } else {
                     alert(data.error || "Failed to delete record");
                 }
-            } catch (err: any) {
-                alert(`An error occurred while deleting record: ${err.message}`);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : "An unknown error occurred";
+                alert(`An error occurred while deleting record: ${message}`);
             }
         }
     };
+
 
     const formatCurrency = (value: number | string) => {
         const num = typeof value === "string" ? parseFloat(value) : value;
@@ -268,7 +272,8 @@ export default function UserDataTable() {
                         </TableHeader>
 
                         <TableBody className="divide-y divide-gray-100 dark:divide-gray-800">
-                            {paginatedUsers.map((user, index) => (
+                            {paginatedUsers.map((user) => (
+
                                 <TableRow
                                     key={user.id}
                                     className="cursor-pointer hover:bg-blue-50/30 dark:hover:bg-blue-500/5 transition-all duration-200"
@@ -370,11 +375,13 @@ export default function UserDataTable() {
                                 <p className="mt-1 text-lg font-medium text-gray-800 dark:text-gray-200">{viewUser.useremail}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20">
-                                <Label className="text-emerald-700 dark:text-emerald-400">Today's Revenue</Label>
+                                <Label className="text-emerald-700 dark:text-emerald-400">Today&apos;s Revenue</Label>
+
                                 <p className="mt-1 text-2xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(viewUser.today_revenue)}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-800 border border-gray-100 dark:border-gray-700">
-                                <Label>Yesterday's Revenue</Label>
+                                <Label>Yesterday&apos;s Revenue</Label>
+
                                 <p className="mt-1 text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(viewUser.yesterday_revenue)}</p>
                             </div>
                             <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20">
@@ -403,10 +410,11 @@ export default function UserDataTable() {
                             </Button>
                             <Button onClick={() => {
                                 viewModal.closeModal();
-                                handleEditClick({} as any, viewUser);
+                                handleEditClick({} as React.MouseEvent, viewUser);
                             }}>
                                 Edit Data
                             </Button>
+
                         </div>
                     </div>
                 )}
@@ -437,13 +445,15 @@ export default function UserDataTable() {
                                 value={formData.useremail || ""}
                                 onChange={(e) => handleInputChange("useremail", e.target.value)}
                                 placeholder="Enter user's email"
+
                                 className="mt-2"
                                 required
                             />
                         </div>
 
                         <div>
-                            <Label htmlFor="today_revenue">Today's Revenue</Label>
+                            <Label htmlFor="today_revenue">Today&apos;s Revenue</Label>
+
                             <Input
                                 type="number"
                                 step={0.001}
@@ -455,7 +465,8 @@ export default function UserDataTable() {
                         </div>
 
                         <div>
-                            <Label htmlFor="yesterday_revenue">Yesterday's Revenue</Label>
+                            <Label htmlFor="yesterday_revenue">Yesterday&apos;s Revenue</Label>
+
                             <Input
                                 type="number"
                                 step={0.001}

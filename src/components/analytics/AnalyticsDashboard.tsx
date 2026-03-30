@@ -57,7 +57,7 @@ export default function AnalyticsDashboard() {
                         setSelectedUserId(userList[0].id.toString());
                     }
                 }
-            } catch (err: any) {
+            } catch (err: unknown) {
                 console.error("Failed to fetch users:", err);
             } finally {
                 setLoading(false);
@@ -79,14 +79,16 @@ export default function AnalyticsDashboard() {
                 if (!res.ok) throw new Error("Failed to fetch analytics for this user");
                 const json = await res.json();
                 setData(json);
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                const message = err instanceof Error ? err.message : "An unknown error occurred";
+                setError(message);
             } finally {
                 setAnalyticsLoading(false);
             }
         }
         fetchAnalytics();
     }, [selectedUserId]);
+
 
     const formatCurrency = (amount: number) => {
         return new Intl.NumberFormat("en-US", {
@@ -252,7 +254,15 @@ export default function AnalyticsDashboard() {
     );
 }
 
-function MetricCard({ title, value, icon, badge, color }: any) {
+interface MetricCardProps {
+    title: string;
+    value: string | number;
+    icon: React.ReactNode;
+    badge: string;
+    color: "success" | "error" | "warning" | "info" | "light";
+}
+
+function MetricCard({ title, value, icon, badge, color }: MetricCardProps) {
     return (
         <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 flex flex-col">
             <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800">
@@ -270,3 +280,4 @@ function MetricCard({ title, value, icon, badge, color }: any) {
         </div>
     );
 }
+

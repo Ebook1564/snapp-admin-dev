@@ -51,8 +51,9 @@ export async function GET(
       }
     } else {
       // Already Buffer
-      fileBuffer = Buffer.from(row.attachment_data as any);
+      fileBuffer = Buffer.from(row.attachment_data as Uint8Array);
     }
+
 
     console.log('✅ Binary data loaded:', fileBuffer.length, 'bytes');
 

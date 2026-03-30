@@ -99,14 +99,15 @@ export default function TicketsTable() {
       setTickets(data.tickets || []);
       setTotalCount(data.total || 0);
       setTotalPages(data.totalPages || Math.ceil((data.total || 0) / ITEMS_PER_PAGE));
-    } catch (err: any) {
-      const errorMessage = err.message || "Failed to load tickets";
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to load tickets";
       setError(`Failed to load tickets: ${errorMessage}. Please try again.`);
       setTickets([]);
       setTotalCount(0);
       setTotalPages(0);
       console.error("Fetch tickets error:", err);
     } finally {
+
       setLoading(false);
     }
   }, [currentPage, selectedTab, debouncedSearchQuery]);
@@ -156,57 +157,8 @@ export default function TicketsTable() {
     router.push(`/tickets/${ticketId}`);
   };
 
-  // Export function
-  const handleExport = async () => {
-    try {
-      if (tickets.length === 0) {
-        setError("No tickets to export");
-        return;
-      }
 
-      const headers = [
-        'ID', 'Category', 'Subject', 'Status', 'Created At'
-      ];
-      
-      const rows = tickets.map((ticket) => {
-        const subject = getSubjectFromDescription(ticket.description);
 
-        return [
-          ticket.id,
-          `"${ticket.category}"`,
-          `"${subject}"`,
-          ticket.status,
-          formatDate(ticket.created_at)
-        ];
-      });
-
-      const csvContent = [
-        headers.join(','),
-        ...rows.map(row => row.join(','))
-      ].join('\n');
-
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `tickets-${selectedTab}-${new Date().toISOString().split('T')[0]}.csv`;
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      const prevError = error;
-      setError(null);
-      setTimeout(() => {
-        if (prevError) setError(prevError);
-      }, 2000);
-
-    } catch (error: any) {
-      setError("Failed to export tickets: " + (error.message || "Unknown error"));
-      console.error("Export error:", error);
-    }
-  };
 
   // Loading state
   if (loading) {

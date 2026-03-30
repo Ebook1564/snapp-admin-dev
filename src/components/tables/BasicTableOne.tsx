@@ -27,20 +27,12 @@ interface Game {
   orientation: string;
 }
 
-const initialFormData: Game = {
-  uid: 0,
-  title: "",
-  thumb: "",
-  categories: [],
-  description: "",
-  embedurl: "",
-  orientation: "portrait",
-};
+
 
 export default function BasicTableOne() {
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+
 
   // Modals
   const addModal = useModal();
@@ -67,15 +59,14 @@ export default function BasicTableOne() {
       const data = await response.json();
       if (data.success) {
         setGames(data.data);
-      } else {
-        setError(data.error || "Failed to fetch games");
       }
-    } catch (err) {
-      setError("An error occurred while fetching games");
+    } catch {
+      console.error("An error occurred while fetching games");
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     fetchGames();
@@ -120,7 +111,8 @@ export default function BasicTableOne() {
     addModal.openModal();
   };
 
-  const handleInputChange = (field: keyof Game, value: any) => {
+  const handleInputChange = (field: keyof Game, value: string | string[]) => {
+
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -154,10 +146,12 @@ const handleSave = async () => {
     } else {
       alert(data.error || "Failed to save");
     }
-  } catch (err: any) {
-    alert(`Error: ${err.message}`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "An unknown error occurred";
+    alert(`Error: ${message}`);
   }
 };
+
 
 
   const handleDelete = async () => {
@@ -178,12 +172,14 @@ const handleSave = async () => {
           console.error("Delete failed:", data.error);
           alert(data.error || "Failed to delete game");
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Delete error:", err);
-        alert(`An error occurred while deleting game: ${err.message}`);
+        const message = err instanceof Error ? err.message : "An unknown error occurred";
+        alert(`An error occurred while deleting game: ${message}`);
       }
     }
   };
+
 
   return (
     <>
@@ -375,10 +371,11 @@ const handleSave = async () => {
                 </Button>
                 <Button onClick={() => {
                   viewModal.closeModal();
-                  handleEditClick({} as any, viewGame);
+                  handleEditClick({} as React.MouseEvent, viewGame);
                 }}>
                   Edit Game
                 </Button>
+
               </div>
             </div>
           </div>

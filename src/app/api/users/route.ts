@@ -22,14 +22,16 @@ export async function GET() {
       { success: true, data: result.rows },
       { status: 200 }
     );
-  } catch (error: any) {
+    } catch (error: unknown) {
     console.error("API /api/users GET error:", error);
+    const message = error instanceof Error ? error.message : "Database query failed";
     return NextResponse.json(
-      { success: false, error: error?.message || "Database query failed" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
+
 
 export async function POST(request: Request) {
   try {
@@ -64,11 +66,13 @@ export async function POST(request: Request) {
       { success: true, data: result.rows[0] },
       { status: 201 }
     );
-  } catch (error: any) {
+    } catch (error: unknown) {
     console.error("API /api/users POST error:", error);
+    const message = error instanceof Error ? error.message : "Failed to create user data entry";
     return NextResponse.json(
-      { success: false, error: error?.message || "Failed to create user data entry" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
+

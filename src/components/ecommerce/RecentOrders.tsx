@@ -14,8 +14,8 @@ import Pagination from "../tables/Pagination";
 import Badge from "../ui/badge/Badge";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
-import Input from "../form/input/InputField";
 import Label from "../form/Label";
+
 
 // Shape of one row coming from /api/users (AWS RDS usertable)
 interface User {
@@ -62,8 +62,9 @@ export default function RecentOrders() {
         } else {
           setError(json.error || "API returned error");
         }
-      } catch (e) {
+      } catch {
         setError("Failed to fetch users");
+
       } finally {
         setLoading(false);
       }

@@ -41,14 +41,22 @@ export async function GET(
       data: result.rows[0]
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("GET error:", error);
+    const message = error instanceof Error ? error.message : "Failed to fetch ticket";
     return NextResponse.json(
-      { success: false, error: "Failed to fetch ticket" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
 }
+
+interface TicketUpdateBody {
+  status?: string;
+  description?: string;
+  [key: string]: string | undefined;
+}
+
 
 // PUT - ✅ FIXED: Handles JSON/FormData, "pending" status, CURRENT_TIMESTAMP
 export async function PUT(
@@ -66,7 +74,8 @@ export async function PUT(
     }
 
     // ✅ PARSE ANY BODY TYPE (JSON, FormData, text)
-    let body: any = {};
+    let body: TicketUpdateBody = {};
+
     const contentType = request.headers.get('content-type') || '';
     
     if (contentType.includes('application/json')) {
@@ -104,8 +113,9 @@ export async function PUT(
 
     // ✅ Build dynamic UPDATE query
     const updates: string[] = [];
-    const values: any[] = [];
+    const values: unknown[] = [];
     let paramIndex = 1;
+
 
     if (body.status !== undefined) {
       updates.push(`status = $${paramIndex}`);
@@ -161,15 +171,17 @@ export async function PUT(
       message: "Ticket updated successfully!"
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("❌ PUT /api/tickets/[id] ERROR:", error);
+    const message = error instanceof Error ? error.message : "Failed to update ticket";
     return NextResponse.json(
       { 
         success: false, 
         error: "Failed to update ticket",
-        details: error.message 
+        details: message 
       },
       { status: 500 }
     );
   }
 }
+

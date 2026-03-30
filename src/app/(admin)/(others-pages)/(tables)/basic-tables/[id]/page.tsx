@@ -37,9 +37,10 @@ export default function GameDetailPage() {
         } else {
           setError(data.error || "Game not found");
         }
-      } catch (_err) {
+      } catch {
         setError("An error occurred while fetching game details");
       } finally {
+
         setLoading(false);
       }
     };

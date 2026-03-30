@@ -1,7 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Badge from "../ui/badge/Badge";
-import { ArrowDownIcon, ArrowUpIcon, BoxIconLine, GroupIcon, DollarLineIcon } from "@/icons";
+import { ArrowUpIcon, GroupIcon, DollarLineIcon } from "@/icons";
+
 
 interface DashboardMetrics {
   todayLogin: number;
