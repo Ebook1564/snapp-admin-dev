@@ -5,10 +5,12 @@ import path from 'path';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const filename = decodeURIComponent(params.filename as string);
+    const { filename: rawFilename } = await params;
+    const filename = decodeURIComponent(rawFilename);
+
     console.log('🔍 Searching for:', filename);
 
     // ✅ FIXED: Search MULTIPLE ways + LIKE pattern

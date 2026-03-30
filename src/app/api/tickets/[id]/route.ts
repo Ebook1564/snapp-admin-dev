@@ -7,10 +7,12 @@ import pool from "@/lib/db";
 // GET - Fetch single ticket (unchanged)
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
+
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
@@ -61,10 +63,12 @@ interface TicketUpdateBody {
 // PUT - ✅ FIXED: Handles JSON/FormData, "pending" status, CURRENT_TIMESTAMP
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ticketId = parseInt(params.id);
+    const { id } = await params;
+    const ticketId = parseInt(id);
+
     
     if (isNaN(ticketId)) {
       return NextResponse.json(
