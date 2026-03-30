@@ -38,12 +38,14 @@ export async function DELETE(
       { success: true, message: "Password deleted successfully" },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("DELETE /api/passwords/[id] error:", error);
+    const message = error instanceof Error ? error.message : "Failed to delete password";
     return NextResponse.json(
-      { success: false, error: "Failed to delete password" },
+      { success: false, error: message },
       { status: 500 }
     );
   }
+
 }
 

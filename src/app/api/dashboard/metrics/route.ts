@@ -94,16 +94,18 @@ export async function GET() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Failed to fetch dashboard metrics";
     console.error("API /api/dashboard/metrics GET error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Failed to fetch dashboard metrics",
+        error: message,
       },
       { status: 500 }
     );
   }
+
 }
 
 

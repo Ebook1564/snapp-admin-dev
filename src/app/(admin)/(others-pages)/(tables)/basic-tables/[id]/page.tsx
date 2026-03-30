@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeftIcon, PencilIcon } from "@/icons";
+import { ChevronLeftIcon } from "@/icons";
 import Button from "@/components/ui/button/Button";
-import Badge from "@/components/ui/badge/Badge";
+
 import Image from "next/image";
 
 // Game interface stays the same
@@ -37,7 +37,7 @@ export default function GameDetailPage() {
         } else {
           setError(data.error || "Game not found");
         }
-      } catch (err) {
+      } catch (_err) {
         setError("An error occurred while fetching game details");
       } finally {
         setLoading(false);

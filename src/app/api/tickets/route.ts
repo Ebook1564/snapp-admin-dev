@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     // Build conditions
-    let conditions: string[] = [];
-    let params: any[] = [];
+    const conditions: string[] = [];
+    const params: any[] = [];
 
     if (statusFilter && statusFilter !== "all") {
       conditions.push(`status = $${params.length + 1}`);

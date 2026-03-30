@@ -22,13 +22,15 @@ export async function GET() {
             { success: true, data: result.rows },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API /api/profile GET error:", error);
+        const message = error instanceof Error ? error.message : "Database query failed";
         return NextResponse.json(
-            { success: false, error: error?.message || "Database query failed" },
+            { success: false, error: message },
             { status: 500 }
         );
     }
+
 }
 
 export async function POST(request: Request) {
@@ -66,11 +68,13 @@ export async function POST(request: Request) {
             { success: true, data: result.rows[0] },
             { status: 201 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API /api/profile POST error:", error);
+        const message = error instanceof Error ? error.message : "Failed to create profile";
         return NextResponse.json(
-            { success: false, error: error?.message || "Failed to create profile" },
+            { success: false, error: message },
             { status: 500 }
         );
     }
+
 }

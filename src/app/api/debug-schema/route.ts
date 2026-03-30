@@ -18,7 +18,9 @@ export async function GET() {
             columns: res.rows,
             sampleRow: rows.rows[0]
         });
-    } catch (error: any) {
-        return NextResponse.json({ success: false, error: error.message });
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "An unexpected error occurred";
+        return NextResponse.json({ success: false, error: message });
     }
 }
+

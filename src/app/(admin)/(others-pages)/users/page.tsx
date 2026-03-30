@@ -43,7 +43,8 @@ export default function AllUsersPage() {
         } else {
           setError(json.error || "API returned error");
         }
-      } catch (e) {
+      } catch (_e) {
+
         setError("Failed to fetch users");
       } finally {
         setLoading(false);

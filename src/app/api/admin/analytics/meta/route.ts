@@ -7,8 +7,10 @@ export async function GET() {
             name: `properties/${process.env.GA_PROPERTY_ID}/metadata`,
         });
 
-        return NextResponse.json(response.dimensions?.filter((d: any) => d.apiName.includes('custom')) || []);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json(response.dimensions?.filter((d: { apiName?: string | null }) => d.apiName?.includes('custom')) || []);
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        return NextResponse.json({ error: message }, { status: 500 });
     }
+
 }

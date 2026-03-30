@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ChevronLeftIcon, EyeIcon, PencilIcon, CheckCircleIcon, TimeIcon } from "@/icons";
+import { ChevronLeftIcon, PencilIcon } from "@/icons";
+
 import Button from "@/components/ui/button/Button";
 import Badge from "@/components/ui/badge/Badge";
 import Select from "@/components/form/Select";

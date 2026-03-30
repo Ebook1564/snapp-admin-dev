@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import pool from "../../../lib/db";
 
 // GET - Fetch all saved passwords
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+
   try {
     const query = `
       SELECT id, email, password, created_at
@@ -17,22 +18,24 @@ export async function GET(request: NextRequest) {
       { success: true, data: result.rows },
       { status: 200 }
     );
-  } catch (error: any) {
-    console.error("GET /api/passwords error:", error);
-    
-    // If table doesn't exist, return empty array
-    if (error.message?.includes("does not exist")) {
+    } catch (error: unknown) {
+      console.error("GET /api/passwords error:", error);
+      const errorMessage = error instanceof Error ? error.message : "";
+      
+      // If table doesn't exist, return empty array
+      if (errorMessage.includes("does not exist")) {
+        return NextResponse.json(
+          { success: true, data: [] },
+          { status: 200 }
+        );
+      }
+      
       return NextResponse.json(
-        { success: true, data: [] },
-        { status: 200 }
+        { success: false, error: "Failed to fetch passwords" },
+        { status: 500 }
       );
     }
-    
-    return NextResponse.json(
-      { success: false, error: "Failed to fetch passwords" },
-      { status: 500 }
-    );
-  }
+
 }
 
 // POST - Save a new password
@@ -84,12 +87,14 @@ export async function POST(request: NextRequest) {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `);
-    } catch (createError: any) {
+    } catch (createError: unknown) {
+      const errorMessage = createError instanceof Error ? createError.message : "";
       // Table might already exist, continue
-      if (!createError.message?.includes("already exists")) {
+      if (!errorMessage.includes("already exists")) {
         console.error("Error creating table:", createError);
       }
     }
+
 
     // Check if email already exists in saved_passwords (prevent duplicates)
     const duplicateCheckQuery = `
@@ -119,13 +124,15 @@ export async function POST(request: NextRequest) {
       { success: true, data: result.rows[0] },
       { status: 201 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("POST /api/passwords error:", error);
+    const errorMessage = error instanceof Error ? error.message : "Failed to save password";
     return NextResponse.json(
-      { success: false, error: "Failed to save password" },
+      { success: false, error: errorMessage },
       { status: 500 }
     );
   }
+
 }
 
 

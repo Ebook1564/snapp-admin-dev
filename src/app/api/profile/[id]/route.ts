@@ -43,13 +43,15 @@ export async function GET(
             { success: true, data: result.rows[0] },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API /api/profile/[id] GET error:", error);
+        const message = error instanceof Error ? error.message : "Database query failed";
         return NextResponse.json(
-            { success: false, error: error?.message || "Database query failed" },
+            { success: false, error: message },
             { status: 500 }
         );
     }
+
 }
 
 export async function PATCH(
@@ -80,7 +82,8 @@ export async function PATCH(
         } = body;
 
         const updates: string[] = [];
-        const values: any[] = [];
+        const values: unknown[] = [];
+
         let paramIndex = 1;
 
         const fields = [
@@ -130,13 +133,15 @@ export async function PATCH(
             { success: true, data: result.rows[0] },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API /api/profile/[id] PATCH error:", error);
+        const message = error instanceof Error ? error.message : "Database update failed";
         return NextResponse.json(
-            { success: false, error: error?.message || "Database update failed" },
+            { success: false, error: message },
             { status: 500 }
         );
     }
+
 }
 
 export async function DELETE(
@@ -170,11 +175,13 @@ export async function DELETE(
             { success: true, message: "Profile deleted successfully" },
             { status: 200 }
         );
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("API /api/profile/[id] DELETE error:", error);
+        const message = error instanceof Error ? error.message : "Database delete failed";
         return NextResponse.json(
-            { success: false, error: error?.message || "Database delete failed" },
+            { success: false, error: message },
             { status: 500 }
         );
     }
+
 }

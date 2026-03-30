@@ -16,7 +16,13 @@ export async function POST() {
     const existingColumnNames = existingColumns.rows.map((row) => row.column_name);
 
     const queries: string[] = [];
-    const results: any[] = [];
+    interface MigrationResult {
+      query: string;
+      success: boolean;
+      error?: string;
+    }
+    const results: MigrationResult[] = [];
+
 
     // Add status column if it doesn't exist
     if (!existingColumnNames.includes('status')) {
@@ -45,13 +51,16 @@ export async function POST() {
     // Execute all queries
     for (const query of queries) {
       try {
-        const result = await pool.query(query);
+        await pool.query(query);
+
         results.push({ query: query.trim().substring(0, 50) + '...', success: true });
-      } catch (error: any) {
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Query failed";
+
         results.push({ 
           query: query.trim().substring(0, 50) + '...', 
           success: false, 
-          error: error.message 
+          error: errorMessage 
         });
       }
     }
@@ -68,12 +77,14 @@ export async function POST() {
       },
       { status: 200 }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Migration failed";
+
     console.error("Migration API error:", error);
     return NextResponse.json(
       {
         success: false,
-        error: error?.message || "Migration failed",
+        error: message,
       },
       { status: 500 }
     );

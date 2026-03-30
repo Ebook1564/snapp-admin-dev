@@ -35,10 +35,16 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             return NextResponse.json({ error: 'User not found' }, { status: 404 });
         }
 
-        // 2. Fetch traffic data from Google Analytics (with fallback)
         let totalSessions = 0;
         let totalImpressions = 0;
-        const trend: any[] = [];
+        interface TrendItem {
+            date: string;
+            sessions: number;
+            impressions: number;
+        }
+        const trend: TrendItem[] = [];
+
+
 
         try {
             const [response] = await gaClient.runReport({
@@ -61,19 +67,22 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
             });
 
             // Parse Google Analytics rows
-            response.rows?.forEach((row: any) => {
-                const sessions = Number(row.metricValues[0]?.value || 0);
-                const impressions = Number(row.metricValues[1]?.value || 0);
+            response.rows?.forEach((row: { metricValues?: Array<{ value?: string | null } | null> | null; dimensionValues?: Array<{ value?: string | null } | null> | null }) => {
+                const sessions = Number(row.metricValues?.[0]?.value || 0);
+                const impressions = Number(row.metricValues?.[1]?.value || 0);
                 totalSessions += sessions;
                 totalImpressions += impressions;
                 trend.push({
-                    date: row.dimensionValues[0].value,
+                    date: row.dimensionValues?.[0]?.value || '',
                     sessions,
                     impressions
                 });
             });
-        } catch (gaError: any) {
-            console.warn('GA4 Fetch Failed (likely due to unregistered custom dimension):', gaError.message);
+
+        } catch (gaError: unknown) {
+            const message = gaError instanceof Error ? gaError.message : 'Unknown GA error';
+            console.warn('GA4 Fetch Failed (likely due to unregistered custom dimension):', message);
+
             // We continue without GA data so the dashboard still shows revenue
         }
 
@@ -90,11 +99,13 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
         };
 
         return NextResponse.json(summary);
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('General API Error:', error);
+        const message = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({
             error: 'Failed to fetch user data',
-            details: error?.message || 'Unknown error'
+            details: message
         }, { status: 500 });
     }
+
 }

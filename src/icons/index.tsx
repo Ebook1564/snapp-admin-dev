@@ -1,4 +1,6 @@
+import React from "react";
 import PlusIcon from "./plus.svg";
+
 import CloseIcon from "./close.svg";
 import BoxIcon from "./box.svg";
 import CheckCircleIcon from "./check-circle.svg";
@@ -53,59 +55,116 @@ import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
 import GameIcon from "./game.svg";
 
+const DownloadIconTyped = (DownloadIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const BellIconTyped = (BellIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const MoreDotIconTyped = (MoreDotIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const FileIconTyped = (FileIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const GridIconTyped = (GridIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const AudioIconTyped = (AudioIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const VideoIconTyped = (VideoIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const BoltIconTyped = (BoltIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const PlusIconTyped = (PlusIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const BoxIconTyped = (BoxIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const CloseIconTyped = (CloseIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const CheckCircleIconTyped = (CheckCircleIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const AlertIconTyped = (AlertIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const InfoIconTyped = (InfoIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ErrorIconTyped = (ErrorIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ArrowUpIconTyped = (ArrowUpIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const FolderIconTyped = (FolderIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ArrowDownIconTyped = (ArrowDownIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ArrowRightIconTyped = (ArrowRightIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const GroupIconTyped = (GroupIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const BoxIconLineTyped = (BoxIconLine as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ShootingStarIconTyped = (ShootingStarIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const DollarLineIconTyped = (DollarLineIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const TrashBinIconTyped = (TrashBinIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const AngleUpIconTyped = (AngleUpIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const AngleDownIconTyped = (AngleDownIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const PencilIconTyped = (PencilIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const CheckLineIconTyped = (CheckLineIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const CloseLineIconTyped = (CloseLineIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ChevronDownIconTyped = (ChevronDownIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ChevronUpIconTyped = (ChevronUpIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const PaperPlaneIconTyped = (PaperPlaneIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const EnvelopeIconTyped = (EnvelopeIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const LockIconTyped = (LockIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const UserIconTyped = (UserIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const CalenderIconTyped = (CalenderIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const EyeIconTyped = (EyeIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const EyeCloseIconTyped = (EyeCloseIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const TimeIconTyped = (TimeIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const CopyIconTyped = (CopyIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ChevronLeftIconTyped = (ChevronLeftIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const UserCircleIconTyped = (UserCircleIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ListIconTyped = (ListIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const TableIconTyped = (TableIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const PageIconTyped = (PageIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const TaskIconTyped = (TaskIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const PieChartIconTyped = (PieChartIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const BoxCubeIconTyped = (BoxCubeIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const PlugInIconTyped = (PlugInIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const DocsIconTyped = (DocsIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const MailIconTyped = (MailIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const HorizontaLDotsTyped = (HorizontaLDots as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const ChatIconTyped = (ChatIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+const GameIconTyped = (GameIcon as unknown) as React.FC<React.SVGProps<SVGSVGElement>>;
+
+
 export {
-  DownloadIcon,
-  BellIcon,
-  MoreDotIcon,
-  FileIcon,
-  GridIcon,
-  AudioIcon,
-  VideoIcon,
-  BoltIcon,
-  PlusIcon,
-  BoxIcon,
-  CloseIcon,
-  CheckCircleIcon,
-  AlertIcon,
-  InfoIcon,
-  ErrorIcon,
-  ArrowUpIcon,
-  FolderIcon,
-  ArrowDownIcon,
-  ArrowRightIcon,
-  GroupIcon,
-  BoxIconLine,
-  ShootingStarIcon,
-  DollarLineIcon,
-  TrashBinIcon,
-  AngleUpIcon,
-  AngleDownIcon,
-  PencilIcon,
-  CheckLineIcon,
-  CloseLineIcon,
-  ChevronDownIcon,
-  PaperPlaneIcon,
-  EnvelopeIcon,
-  LockIcon,
-  UserIcon,
-  CalenderIcon,
-  EyeIcon,
-  EyeCloseIcon,
-  TimeIcon,
-  CopyIcon,
-  ChevronLeftIcon,
-  UserCircleIcon,
-  ListIcon,
-  TableIcon,
-  PageIcon,
-  TaskIcon,
-  PieChartIcon,
-  BoxCubeIcon,
-  PlugInIcon,
-  DocsIcon,
-  MailIcon,
-  HorizontaLDots,
-  ChevronUpIcon,
-  ChatIcon,
-  GameIcon,
+  DownloadIconTyped as DownloadIcon,
+  BellIconTyped as BellIcon,
+  MoreDotIconTyped as MoreDotIcon,
+  FileIconTyped as FileIcon,
+  GridIconTyped as GridIcon,
+  AudioIconTyped as AudioIcon,
+  VideoIconTyped as VideoIcon,
+  BoltIconTyped as BoltIcon,
+  PlusIconTyped as PlusIcon,
+  BoxIconTyped as BoxIcon,
+  CloseIconTyped as CloseIcon,
+  CheckCircleIconTyped as CheckCircleIcon,
+  AlertIconTyped as AlertIcon,
+  InfoIconTyped as InfoIcon,
+  ErrorIconTyped as ErrorIcon,
+  ArrowUpIconTyped as ArrowUpIcon,
+  FolderIconTyped as FolderIcon,
+  ArrowDownIconTyped as ArrowDownIcon,
+  ArrowRightIconTyped as ArrowRightIcon,
+  GroupIconTyped as GroupIcon,
+  BoxIconLineTyped as BoxIconLine,
+  ShootingStarIconTyped as ShootingStarIcon,
+  DollarLineIconTyped as DollarLineIcon,
+  TrashBinIconTyped as TrashBinIcon,
+  AngleUpIconTyped as AngleUpIcon,
+  AngleDownIconTyped as AngleDownIcon,
+  PencilIconTyped as PencilIcon,
+  CheckLineIconTyped as CheckLineIcon,
+  CloseLineIconTyped as CloseLineIcon,
+  ChevronDownIconTyped as ChevronDownIcon,
+  ChevronUpIconTyped as ChevronUpIcon,
+  PaperPlaneIconTyped as PaperPlaneIcon,
+  EnvelopeIconTyped as EnvelopeIcon,
+  LockIconTyped as LockIcon,
+  UserIconTyped as UserIcon,
+  CalenderIconTyped as CalenderIcon,
+  EyeIconTyped as EyeIcon,
+  EyeCloseIconTyped as EyeCloseIcon,
+  TimeIconTyped as TimeIcon,
+  CopyIconTyped as CopyIcon,
+  ChevronLeftIconTyped as ChevronLeftIcon,
+  UserCircleIconTyped as UserCircleIcon,
+  ListIconTyped as ListIcon,
+  TableIconTyped as TableIcon,
+  PageIconTyped as PageIcon,
+  TaskIconTyped as TaskIcon,
+  PieChartIconTyped as PieChartIcon,
+  BoxCubeIconTyped as BoxCubeIcon,
+  PlugInIconTyped as PlugInIcon,
+  DocsIconTyped as DocsIcon,
+  MailIconTyped as MailIcon,
+  HorizontaLDotsTyped as HorizontaLDots,
+  ChatIconTyped as ChatIcon,
+  GameIconTyped as GameIcon,
 };
+

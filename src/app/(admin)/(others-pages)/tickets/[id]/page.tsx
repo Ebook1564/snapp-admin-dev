@@ -78,10 +78,12 @@ export default function TicketDetailPage() {
         const dbTicket = apiResponse.data;
         setTicket(dbTicket);
         setFormData(dbTicket);
-      } catch (err: any) {
-        setError(err.message || "Failed to load ticket");
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to load ticket";
+        setError(errorMessage);
         console.error("Fetch ticket error:", err);
       } finally {
+
         setLoading(false);
       }
     };
@@ -173,11 +175,14 @@ export default function TicketDetailPage() {
       console.log("Update successful!");
       return true;
       
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Network or fetch error:", err);
       
+      const errorMsg = err instanceof Error ? err.message : "An unexpected error occurred";
+      const errorName = err instanceof Error ? err.name : "";
+
       // Check for network errors
-      if (err.name === 'TypeError') {
+      if (errorName === 'TypeError') {
         setSaveMessage({ 
           type: 'error', 
           text: "Network error. Please check if server is running." 
@@ -185,11 +190,12 @@ export default function TicketDetailPage() {
       } else {
         setSaveMessage({ 
           type: 'error', 
-          text: err.message || "An unexpected error occurred" 
+          text: errorMsg
         });
       }
       return false;
     } finally {
+
       setIsSaving(false);
     }
   };
