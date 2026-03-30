@@ -5,12 +5,12 @@ import pool from "../../../../lib/db";
 // DELETE - Delete a saved password
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> | { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Handle both Promise and direct params (for Next.js compatibility)
-    const resolvedParams = params instanceof Promise ? await params : params;
-    const id = parseInt(resolvedParams.id);
+    const { id: rawId } = await params;
+    const id = parseInt(rawId);
+
     
     if (isNaN(id)) {
       return NextResponse.json(
