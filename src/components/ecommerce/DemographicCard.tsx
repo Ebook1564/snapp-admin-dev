@@ -70,7 +70,7 @@
 //               <Image
 //                 width={48}
 //                 height={48}
-//                 src="/tailadmin-nextjs/images/country/country-01.svg"
+//                 src="/images/country/country-01.svg"
 //                 alt="usa"
 //                 className="w-full"
 //               />
@@ -102,7 +102,7 @@
 //                 width={48}
 //                 height={48}
 //                 className="w-full"
-//                 src="/tailadmin-nextjs/images/country/country-02.svg"
+//                 src="/images/country/country-02.svg"
 //                 alt="france"
 //               />
 //             </div>
